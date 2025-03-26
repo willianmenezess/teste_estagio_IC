@@ -1,5 +1,8 @@
+
 import requests
 from bs4 import BeautifulSoup
+import zipfile
+import os
 
 def get_title(url):
     response = requests.get(url)
@@ -12,6 +15,7 @@ def get_title(url):
 
 def download_pdfs(url):
     response = requests.get(url)
+    pdf_files = []
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
         pdf_links = [a['href'] for a in soup.find_all('a', href=True) if 'anexo' in a['href'].lower() and a['href'].endswith('.pdf')]
@@ -23,14 +27,25 @@ def download_pdfs(url):
                 filename = f"Anexo_{i}.pdf"
                 with open(filename, 'wb') as file:
                     file.write(pdf_response.content)
+                pdf_files.append(filename)
                 print(f"Download concluído: {filename}")
             else:
                 print(f"Erro ao baixar {pdf_url}")
     else:
         print(f"Erro ao acessar a página. Status: {response.status_code}")
+    return pdf_files
+
+def create_zip(pdf_files, zip_name="Anexos.zip"):
+    with zipfile.ZipFile(zip_name, 'w') as zipf:
+        for pdf in pdf_files:
+            zipf.write(pdf, os.path.basename(pdf))
+    print(f"Arquivo ZIP criado: {zip_name}")
 
 if __name__ == '__main__':
     url = 'https://www.gov.br/ans/pt-br/acesso-a-informacao/participacao-da-sociedade/atualizacao-do-rol-de-procedimentos'
     print(get_title(url))
-    download_pdfs(url)
+    pdf_files = download_pdfs(url)
+    if pdf_files:
+        create_zip(pdf_files)
+
 
