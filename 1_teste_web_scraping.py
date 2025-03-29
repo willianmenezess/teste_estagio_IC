@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import zipfile
 import os
+import pdfplumber
+import csv
 
 def get_title(url):
     response = requests.get(url)
@@ -40,11 +42,29 @@ def create_zip(pdf_files, zip_name="Anexos.zip"):  #recebe uma lista de arquivos
             zipf.write(pdf, os.path.basename(pdf))  #adiciona o arquivo PDF ao ZIP
     print(f"Arquivo ZIP criado: {zip_name}")
 
+def extract_rol_table(pdf_file, output_csv="rol_de_procedimentos.csv"):  #recebe um arquivo PDF e um nome para o arquivo CSV e retorna o nome do arquivo
+    with pdfplumber.open(pdf_file) as pdf:
+        table_data = []
+        for page in pdf.pages:
+            tables = page.extract_tables()
+            for table in tables:
+                for row in table:
+                    cleaned_row = [cell.strip() if cell else "" for cell in row]  # Limpa espaços extras
+                    table_data.append(cleaned_row)
+    
+    with open(output_csv, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerows(table_data)
+    print(f"Tabela estruturada extraída e salva como {output_csv}")
+    return output_csv
+
+
 if __name__ == '__main__':
     url = 'https://www.gov.br/ans/pt-br/acesso-a-informacao/participacao-da-sociedade/atualizacao-do-rol-de-procedimentos'
     print(get_title(url)) #teste 1.1 - imprime o título da página
     pdf_files = download_pdfs(url) #teste 1.2 - baixa os PDFs da página
     if pdf_files:
         create_zip(pdf_files) #teste 1.3 - cria um arquivo ZIP com os PDFs baixados
+        extract_rol_table(pdf_files[0]) #teste 2.1 - extrai a tabela do primeiro PDF baixado e salva como CSV
 
 
