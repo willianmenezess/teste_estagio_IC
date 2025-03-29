@@ -42,7 +42,7 @@ def create_zip(pdf_files, zip_name="Anexos.zip"):  #recebe uma lista de arquivos
             zipf.write(pdf, os.path.basename(pdf))  #adiciona o arquivo PDF ao ZIP
     print(f"Arquivo ZIP criado: {zip_name}")
 
-def extract_rol_table(pdf_file, output_csv="rol_de_procedimentos.csv"):  #recebe um arquivo PDF e um nome para o arquivo CSV e retorna o nome do arquivo
+def extract_rol_table(pdf_file, output_csv="rol_de_procedimentos.csv"):  #recebe um arquivo PDF e um nome para o arquivo CSV que será gerado
     with pdfplumber.open(pdf_file) as pdf:
         table_data = []
         for page in pdf.pages:
@@ -52,11 +52,16 @@ def extract_rol_table(pdf_file, output_csv="rol_de_procedimentos.csv"):  #recebe
                     cleaned_row = [cell.strip() if cell else "" for cell in row]  # Limpa espaços extras
                     table_data.append(cleaned_row)
     
-    with open(output_csv, mode='w', newline='', encoding='utf-8') as file:
+    with open(output_csv, mode='w', newline='', encoding='utf-8') as file:  #cria o arquivo CSV em modo de escrita
         writer = csv.writer(file)
         writer.writerows(table_data)
     print(f"Tabela estruturada extraída e salva como {output_csv}")
-    return output_csv
+    return output_csv #retorna o nome do arquivo gerado
+
+def csv_zip(csv_file, zip_name="Teste_Willian.zip"):  #recebe um arquivo CSV e um nome para o arquivo ZIP que será gerado
+    with zipfile.ZipFile(zip_name, 'w') as zipf:
+        zipf.write(csv_file, os.path.basename(csv_file))
+    print(f"Arquivo ZIP criado: {zip_name}")
 
 
 if __name__ == '__main__':
@@ -65,6 +70,6 @@ if __name__ == '__main__':
     pdf_files = download_pdfs(url) #teste 1.2 - baixa os PDFs da página
     if pdf_files:
         create_zip(pdf_files) #teste 1.3 - cria um arquivo ZIP com os PDFs baixados
-        extract_rol_table(pdf_files[0]) #teste 2.1 - extrai a tabela do primeiro PDF baixado e salva como CSV
-
+        csv_file = extract_rol_table(pdf_files[0]) #teste 2.1 - extrai a tabela do primeiro PDF baixado e salva como CSV
+        csv_zip(csv_file)
 
