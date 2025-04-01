@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  mysql:
+    build: .
+    container_name: mysql_operadoras
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ans_operadoras
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../downloads:/var/lib/mysql-files
+      - ./init:/docker-entrypoint-initdb.d
+
+volumes:
+  mysql_data:
